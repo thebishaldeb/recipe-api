@@ -11,17 +11,44 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
-  server:
-    build: .
+  redis:
+    image: redis:latest
+
+  django:
+    build:
+      context: .
+      dockerfile: Dockerfile
     container_name: django
-    command: python manage.py runserver
+    command: gunicorn config.wsgi:application --bind 0.0.0.0:8000
     volumes:
       - .:/app
     ports:
       - "8000:8000"
     depends_on:
-      database:
-        condition: service_healthy
+      - database
+      - redis
+    env_file:
+      - .env
+
+  celery:
+    build:
+      context: .
+      dockerfile: Dockerfile.celery
+    command: celery -A config worker --loglevel=info
+    depends_on:
+      - redis
+      - django
+    env_file:
+      - .env
+
+  celery-beat:
+    build:
+      context: .
+      dockerfile: Dockerfile.celery_beat
+    command: celery -A config beat --loglevel=info
+    depends_on:
+      - redis
+      - django
     env_file:
       - .env
 
