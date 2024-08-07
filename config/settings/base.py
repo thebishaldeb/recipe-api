@@ -31,6 +31,7 @@ INSTALLED_APPS = [
     'django_filters',
     'drf_spectacular',
     'django_rest_passwordreset',
+    "django_celery_beat",
 
     # Local apps
     'users',
@@ -194,3 +195,7 @@ SIMPLE_JWT = {
 
 # Password reset token lifetime
 DJANGO_REST_MULTITOKENAUTH_RESET_TOKEN_EXPIRY_TIME = 3  # in hours
+
+# Celery settings
+CELERY_BROKER_URL = config("CELERY_BROKER_URL")
+CELERY_RESULT_BACKEND = config("CELERY_RESULT_BACKEND")
