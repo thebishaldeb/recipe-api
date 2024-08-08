@@ -12,7 +12,7 @@ def setup_periodic_tasks(sender, **kwargs):
     )
 
     PeriodicTask.objects.get_or_create(
-        interval=schedule,
+        crontab=schedule,
         name='Send daily notifications',
         task='recipe.tasks.send_daily_notifications',
     )
