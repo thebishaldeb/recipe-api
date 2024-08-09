@@ -69,7 +69,7 @@ def test_put_recipe(auth_client, recipe, category):
         'cook_time': '02:00:00',
         'ingredients': 'item1, item2',
         'procedure': 'procedure1',
-        'category': category.id,
+        'category.name': category.name,
         'picture': picture
     }
     response = auth_client.put(reverse('recipe:recipe-detail', args=[recipe.id]), data=payload, format="multipart")
@@ -116,7 +116,7 @@ def test_post_create_recipe(auth_client, category, user):
 
     payload = {
         'author': user.id,
-        'category':  category.name,
+        'category.name': category.name,
         'title': 'New Recipe',
         'desc': 'New description',
         'cook_time': '01:30:00',
@@ -127,4 +127,4 @@ def test_post_create_recipe(auth_client, category, user):
     response = auth_client.post(reverse('recipe:recipe-create'), payload, format='multipart')
     print(response.data, payload)
     assert response.status_code == status.HTTP_201_CREATED
-    assert Recipe.objects.count() == 2
+    assert Recipe.objects.count() == 1
