@@ -8,14 +8,24 @@ def setup_periodic_tasks(sender, **kwargs):
         hour='8',
         day_of_week='*',  
         day_of_month='*',  
-        month_of_year='*',  
+        month_of_year='*',
+        timezone='Asia/Kolkata'
     )
 
-    PeriodicTask.objects.get_or_create(
-        crontab=schedule,
-        name='Send daily notifications',
-        task='recipe.tasks.send_daily_notifications',
+    task_name = 'Send daily notifications'
+    task, created = PeriodicTask.objects.get_or_create(
+        name=task_name,
+        defaults={
+            'crontab': schedule,
+            'task': 'recipe.tasks.send_daily_notifications',
+        }
     )
+
+    if not created:
+        task.crontab = schedule
+        task.task = 'recipe.tasks.send_daily_notifications'
+        task.save()
+
 
 class RecipeConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
