@@ -60,7 +60,7 @@ class RecipeLikeAPIView(generics.CreateAPIView):
         like = RecipeLike.objects.filter(user=request.user, recipe=recipe)
         if like.exists():
             like.delete()
-            return Response(status=status.HTTP_200_OK)
+            return Response(status=status.HTTP_204_NO_CONTENT)
         return Response(status=status.HTTP_400_BAD_REQUEST)
 
     def perform_create(self, serializer):

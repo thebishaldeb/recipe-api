@@ -1,0 +1,130 @@
+import json
+import pytest
+from rest_framework import status
+from rest_framework.test import APIClient
+from django.urls import reverse
+from recipe.models import Recipe, RecipeCategory
+from users.models import CustomUser
+from django.core.files.uploadedfile import SimpleUploadedFile
+from PIL import Image
+import io
+
+@pytest.fixture
+def api_client():
+    return APIClient()
+
+@pytest.fixture
+def user():
+    user = CustomUser.objects.create_user(username='testuser', email="testuser#example.com", password='testpassword')
+    return user
+
+@pytest.fixture
+def auth_client(api_client, user):
+    api_client.force_authenticate(user=user)
+    return api_client
+
+@pytest.fixture
+def category():
+    return RecipeCategory.objects.create(name='category1')
+
+@pytest.fixture
+def recipe(category, user):
+    return Recipe.objects.create(
+        author=user,
+        category=category,
+        title='Init Recipe',
+        desc='Init description',
+        cook_time='01:00:00',
+        ingredients='item1, item2',
+        procedure='procedure1'
+    )
+
+@pytest.mark.django_db
+def test_get_recipe_list(auth_client, recipe):
+    response = auth_client.get(reverse('recipe:recipe-list'), {
+        'category__name': recipe.category.name,
+        'author__username': recipe.author.username
+    })
+    assert response.status_code == status.HTTP_200_OK
+    assert len(response.data) == 1
+
+@pytest.mark.django_db
+def test_get_recipe_detail(auth_client, recipe):
+    response = auth_client.get(reverse('recipe:recipe-detail', args=[recipe.id]))
+    assert response.status_code == status.HTTP_200_OK
+    assert response.data['title'] == 'Init Recipe'
+
+@pytest.mark.django_db
+def test_put_recipe(auth_client, recipe, category):
+    image = Image.new('RGB', (100, 100), color = 'red')
+    img_byte_arr = io.BytesIO()
+    image.save(img_byte_arr, format='JPEG')
+    img_byte_arr.seek(0)
+
+    picture = SimpleUploadedFile("image.jpg", img_byte_arr.read(), content_type="image/jpeg")
+
+    payload = {
+        'title': 'Updated Recipe',
+        'desc': 'Updated description',
+        'cook_time': '02:00:00',
+        'ingredients': 'item1, item2',
+        'procedure': 'procedure1',
+        'category': category.id,
+        'picture': picture
+    }
+    response = auth_client.put(reverse('recipe:recipe-detail', args=[recipe.id]), data=payload, format="multipart")
+    print(response.data)
+    assert response.status_code == status.HTTP_200_OK
+    recipe.refresh_from_db()
+    assert recipe.title == 'Updated Recipe'
+
+@pytest.mark.django_db
+def test_patch_recipe(auth_client, recipe):
+    payload = {'desc': 'Partially updated description'}
+    response = auth_client.patch(reverse('recipe:recipe-detail', args=[recipe.id]), payload, format='json')
+    assert response.status_code == status.HTTP_200_OK
+    recipe.refresh_from_db()
+    assert recipe.desc == 'Partially updated description'
+
+@pytest.mark.django_db
+def test_delete_recipe(auth_client, recipe):
+    response = auth_client.delete(reverse('recipe:recipe-detail', args=[recipe.id]))
+    assert response.status_code == status.HTTP_204_NO_CONTENT
+    assert Recipe.objects.count() == 0
+
+@pytest.mark.django_db
+def test_post_recipe_like(auth_client, recipe):
+    response = auth_client.post(reverse('recipe:recipe-like', args=[recipe.id]))
+    assert response.status_code == status.HTTP_201_CREATED
+    assert recipe.get_total_number_of_likes() == 1
+
+@pytest.mark.django_db
+def test_delete_recipe_like(auth_client, recipe):
+    auth_client.post(reverse('recipe:recipe-like', args=[recipe.id]))
+    response = auth_client.delete(reverse('recipe:recipe-like', args=[recipe.id]))
+    assert response.status_code == status.HTTP_204_NO_CONTENT
+    assert recipe.get_total_number_of_likes() == 0
+
+@pytest.mark.django_db
+def test_post_create_recipe(auth_client, category, user):
+    image = Image.new('RGB', (100, 100), color = 'red')
+    img_byte_arr = io.BytesIO()
+    image.save(img_byte_arr, format='JPEG')
+    img_byte_arr.seek(0)
+
+    picture = SimpleUploadedFile("image.jpg", img_byte_arr.read(), content_type="image/jpeg")
+
+    payload = {
+        'author': user.id,
+        'category':  category.name,
+        'title': 'New Recipe',
+        'desc': 'New description',
+        'cook_time': '01:30:00',
+        'ingredients': 'Ingredients',
+        'procedure': 'Procedure',
+        'picture': picture
+    }
+    response = auth_client.post(reverse('recipe:recipe-create'), payload, format='multipart')
+    print(response.data, payload)
+    assert response.status_code == status.HTTP_201_CREATED
+    assert Recipe.objects.count() == 2
