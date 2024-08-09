@@ -2,12 +2,10 @@ from rest_framework import serializers
 
 from .models import Recipe, RecipeCategory, RecipeLike
 
-
 class RecipeCategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = RecipeCategory
         fields = ('id', 'name')
-
 
 class RecipeSerializer(serializers.ModelSerializer):
     author = serializers.PrimaryKeyRelatedField(read_only=True)

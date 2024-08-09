@@ -108,7 +108,7 @@ class UserAvatarAPIView(RetrieveUpdateAPIView):
 
 class UserBookmarkAPIView(ListCreateAPIView):
     """
-    Get, Create, Delete favorite recipe
+    Get, Create, Delete favorite recipe Bookmark
     """
     serializer_class = RecipeSerializer
     permission_classes = (IsAuthenticated,)
