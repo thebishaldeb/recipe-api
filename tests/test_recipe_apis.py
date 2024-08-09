@@ -1,3 +1,5 @@
+# API test cases for recipe module
+
 import pytest
 from rest_framework import status
 from rest_framework.test import APIClient
@@ -7,6 +9,7 @@ from users.models import CustomUser
 from django.core.files.uploadedfile import SimpleUploadedFile
 from PIL import Image
 import io
+from django.core.files.storage import default_storage
 
 @pytest.fixture
 def api_client():
@@ -69,6 +72,10 @@ def test_post_recipe(auth_client, category):
     response = auth_client.post(reverse('recipe:recipe-list'), payload, format='multipart')
     assert response.status_code == status.HTTP_201_CREATED
     assert response.data["category_name"] == category.name
+    avatar_path = response.data['picture'].split('/')[-1]
+    full_file_path = f'uploads/{avatar_path}'
+    if default_storage.exists(full_file_path):
+        default_storage.delete(full_file_path)
 
 # GET /api/recipe/{id}/
 @pytest.mark.django_db
@@ -100,6 +107,10 @@ def test_put_recipe(auth_client, recipe, category):
     assert response.status_code == status.HTTP_200_OK
     recipe.refresh_from_db()
     assert recipe.title == 'Updated Recipe'
+    avatar_path = response.data['picture'].split('/')[-1]
+    full_file_path = f'uploads/{avatar_path}'
+    if default_storage.exists(full_file_path):
+        default_storage.delete(full_file_path)
 
 # PATCH /api/recipe/{id}/
 @pytest.mark.django_db
@@ -167,6 +178,10 @@ def test_post_create_recipe(auth_client, category):
     response = auth_client.post(reverse('recipe:recipe-create'), payload, format='multipart')
     assert response.status_code == status.HTTP_201_CREATED
     assert response.data["category_name"] == category.name
+    avatar_path = response.data['picture'].split('/')[-1]
+    full_file_path = f'uploads/{avatar_path}'
+    if default_storage.exists(full_file_path):
+        default_storage.delete(full_file_path)
 
 # POST /api/recipe/create/ - Failure
 @pytest.mark.django_db

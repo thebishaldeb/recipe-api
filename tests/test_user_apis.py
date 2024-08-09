@@ -1,3 +1,5 @@
+# API test cases for user module
+
 import pytest
 from rest_framework import status
 from rest_framework.test import APIClient
@@ -7,6 +9,7 @@ from recipe.models import Recipe, RecipeCategory
 from django.core.files.uploadedfile import SimpleUploadedFile
 from PIL import Image
 import io
+from django.core.files.storage import default_storage
 
 @pytest.fixture
 def api_client():
@@ -214,6 +217,10 @@ def test_update_user_avatar(auth_client):
     response = auth_client.put(url, data, format='multipart')
     assert response.status_code == status.HTTP_200_OK
     assert 'avatar' in response.data
+    avatar_path = response.data['avatar'].split('/')[-1]
+    full_file_path = f'avatar/{avatar_path}'
+    if default_storage.exists(full_file_path):
+        default_storage.delete(full_file_path)
 
 # PATCH /api/user/profile/avatar/
 @pytest.mark.django_db
@@ -229,6 +236,10 @@ def test_partial_update_user_avatar(auth_client):
     response = auth_client.patch(url, data, format='multipart')
     assert response.status_code == status.HTTP_200_OK
     assert 'avatar' in response.data
+    avatar_path = response.data['avatar'].split('/')[-1]
+    full_file_path = f'avatar/{avatar_path}'
+    if default_storage.exists(full_file_path):
+        default_storage.delete(full_file_path)
 
 # POST /api/user/register/
 @pytest.mark.django_db

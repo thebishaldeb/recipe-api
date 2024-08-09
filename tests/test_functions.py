@@ -1,3 +1,5 @@
+# This file is for functions that are not covered in api
+
 import pytest
 from recipe.models import get_default_recipe_category
 from users.models import CustomUser
