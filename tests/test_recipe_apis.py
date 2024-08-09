@@ -46,7 +46,7 @@ def test_get_recipe_list(auth_client, recipe):
         'author__username': recipe.author.username
     })
     assert response.status_code == status.HTTP_200_OK
-    assert len(response.data) == 1
+    assert response.data["count"] == 1
 
 # POST /api/recipe/
 @pytest.mark.django_db

@@ -172,7 +172,7 @@ def test_get_user_bookmarks(auth_client, user, recipe):
     response = auth_client.post(url, data)
     response = auth_client.get(url)
     assert response.status_code == status.HTTP_200_OK
-    assert len(response.data) == 1
+    assert response.data["count"] == 1
 
 # POST /api/user/profile/{id}/bookmarks/
 @pytest.mark.django_db
