@@ -2,7 +2,6 @@ from django.db import models
 from django.conf import settings
 from django.utils.translation import gettext_lazy as _
 
-
 class RecipeCategory(models.Model):
     """
     Recipe categories
@@ -16,13 +15,12 @@ class RecipeCategory(models.Model):
     def __str__(self):
         return self.name
 
-
 def get_default_recipe_category():
     """
     Returns a default recipe type.
     """
-    return RecipeCategory.objects.get_or_create(name='Others')[0]
-
+    category, created = RecipeCategory.objects.get_or_create(name='Others')
+    return category
 
 class Recipe(models.Model):
     """
@@ -53,15 +51,16 @@ class Recipe(models.Model):
     def get_total_number_of_bookmarks(self):
         return self.bookmarked_by.count()
 
-
 class RecipeLike(models.Model):
     """
     Model to like recipes
     """
-    user = models.ForeignKey(settings.AUTH_USER_MODEL,
-                             on_delete=models.CASCADE)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE)
     created = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('user', 'recipe')
 
     def __str__(self):
         return self.user.username

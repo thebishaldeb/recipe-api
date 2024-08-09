@@ -1,5 +1,4 @@
 from rest_framework import serializers
-
 from .models import Recipe, RecipeCategory, RecipeLike
 
 class RecipeCategorySerializer(serializers.ModelSerializer):

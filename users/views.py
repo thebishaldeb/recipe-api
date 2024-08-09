@@ -1,7 +1,7 @@
 from rest_framework import status
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.generics import GenericAPIView, ListCreateAPIView, RetrieveUpdateAPIView, UpdateAPIView
+from rest_framework.generics import GenericAPIView, RetrieveUpdateAPIView, ListCreateAPIView, UpdateAPIView
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
@@ -13,10 +13,9 @@ from . import serializers
 
 User = get_user_model()
 
-
 class UserRegisterationAPIView(GenericAPIView):
     """
-    An endpoint for the client to create a new User. 
+    An endpoint for clients to create a new user.
     """
     permission_classes = (AllowAny,)
     serializer_class = serializers.UserRegisterationSerializer
@@ -45,35 +44,36 @@ class UserLoginAPIView(GenericAPIView):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.validated_data
-        serializer = serializers.CustomUserSerializer(user)
+        response_data = serializers.CustomUserSerializer(user).data
         token = RefreshToken.for_user(user)
-        data = serializer.data
-        data['tokens'] = {
+        response_data['tokens'] = {
             'refresh': str(token),
             'access': str(token.access_token)
         }
-        return Response(data, status=status.HTTP_200_OK)
+        return Response(response_data, status=status.HTTP_200_OK)
 
 
 class UserLogoutAPIView(GenericAPIView):
     """
-    An endpoint to logout users.
+    An endpoint to log out users.
     """
     permission_classes = (IsAuthenticated,)
 
     def post(self, request, *args, **kwargs):
+        refresh_token = request.data.get("refresh")
+        if not refresh_token:
+            return Response({"detail": "Refresh token is required"}, status=status.HTTP_400_BAD_REQUEST)
         try:
-            refresh_token = request.data["refresh"]
             token = RefreshToken(refresh_token)
             token.blacklist()
             return Response(status=status.HTTP_205_RESET_CONTENT)
         except Exception as e:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
+            return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class UserAPIView(RetrieveUpdateAPIView):
     """
-    Get, Update user information
+    Get and update user information.
     """
     permission_classes = (IsAuthenticated,)
     serializer_class = serializers.CustomUserSerializer
@@ -84,11 +84,10 @@ class UserAPIView(RetrieveUpdateAPIView):
 
 class UserProfileAPIView(RetrieveUpdateAPIView):
     """
-    Get, Update user profile
+    Get and update user profile.
     """
-    queryset = Profile.objects.all()
-    serializer_class = serializers.ProfileSerializer
     permission_classes = (IsAuthenticated,)
+    serializer_class = serializers.ProfileSerializer
 
     def get_object(self):
         return self.request.user.profile
@@ -96,11 +95,10 @@ class UserProfileAPIView(RetrieveUpdateAPIView):
 
 class UserAvatarAPIView(RetrieveUpdateAPIView):
     """
-    Get, Update user avatar
+    Get and update user avatar.
     """
-    queryset = Profile.objects.all()
-    serializer_class = serializers.ProfileAvatarSerializer
     permission_classes = (IsAuthenticated,)
+    serializer_class = serializers.ProfileAvatarSerializer
 
     def get_object(self):
         return self.request.user.profile
@@ -108,39 +106,37 @@ class UserAvatarAPIView(RetrieveUpdateAPIView):
 
 class UserBookmarkAPIView(ListCreateAPIView):
     """
-    Get, Create, Delete favorite recipe Bookmark
+    Get, create, and delete favorite recipe bookmarks.
     """
-    serializer_class = RecipeSerializer
     permission_classes = (IsAuthenticated,)
-    profile = Profile.objects.all()
+    serializer_class = RecipeSerializer
 
     def get_queryset(self):
-        user = User.objects.get(id=self.kwargs['pk'])
-        user_profile = get_object_or_404(self.profile, user=user)
-        return user_profile.bookmarks.all()
+        return self.request.user.profile.bookmarks.all()
 
-    def post(self, request, pk):
-        user = User.objects.get(id=pk)
-        user_profile = get_object_or_404(self.profile, user=user)
-        recipe = Recipe.objects.get(id=request.data['id'])
-        if user_profile:
-            user_profile.bookmarks.add(recipe)
-            return Response(status=status.HTTP_200_OK)
-        return Response(status=status.HTTP_400_BAD_REQUEST)
+    def post(self, request):
+        recipe_id = request.data.get('id')
+        if not recipe_id:
+            return Response({"detail": "Recipe ID is required"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        recipe = get_object_or_404(Recipe, id=recipe_id)
+        user_profile = self.request.user.profile
+        user_profile.bookmarks.add(recipe)
+        return Response(status=status.HTTP_200_OK)
 
-    def delete(self, request, pk):
-        user = User.objects.get(id=pk)
-        user_profile = get_object_or_404(self.profile, user=user)
-        recipe = Recipe.objects.get(id=request.data['id'])
-        if user_profile:
-            user_profile.bookmarks.remove(recipe)
-            return Response(status=status.HTTP_200_OK)
-        return Response(status=status.HTTP_400_BAD_REQUEST)
+    def delete(self, request):
+        recipe_id = request.data.get('id')
+        if not recipe_id:
+            return Response({"detail": "Recipe ID is required"}, status=status.HTTP_400_BAD_REQUEST)
+        recipe = get_object_or_404(Recipe, id=recipe_id)
+        user_profile = self.request.user.profile
+        user_profile.bookmarks.remove(recipe)
+        return Response(status=status.HTTP_200_OK)
 
 
 class PasswordChangeAPIView(UpdateAPIView):
     """
-    Change password view for authenticated user
+    Change password for authenticated users.
     """
     permission_classes = (IsAuthenticated,)
     serializer_class = serializers.PasswordChangeSerializer

@@ -38,15 +38,15 @@ class RecipeLikeViewSet(viewsets.ViewSet):
     """
     Like, Dislike a recipe
     """
-    @action(detail=True, methods=['post'], url_path='like', permission_classes=[IsAuthenticated])
+    @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated], url_path='like')
     def like(self, request, pk=None):
         recipe = get_object_or_404(Recipe, pk=pk)
-        new_like, created = RecipeLike.objects.get_or_create(user=request.user, recipe=recipe)
+        like, created = RecipeLike.objects.get_or_create(user=request.user, recipe=recipe)
         if created:
             return Response(status=status.HTTP_201_CREATED)
         return Response(status=status.HTTP_400_BAD_REQUEST)
 
-    @action(detail=True, methods=['delete'], url_path='like', permission_classes=[IsAuthenticated])
+    @action(detail=True, methods=['delete'], permission_classes=[IsAuthenticated], url_path='like')
     def unlike(self, request, pk=None):
         recipe = get_object_or_404(Recipe, pk=pk)
         like = RecipeLike.objects.filter(user=request.user, recipe=recipe)
