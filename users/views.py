@@ -11,7 +11,6 @@ from .models import Profile
 from recipe.serializers import RecipeSerializer
 from . import serializers
 
-
 User = get_user_model()
 
 

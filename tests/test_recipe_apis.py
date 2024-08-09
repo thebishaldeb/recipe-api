@@ -124,6 +124,14 @@ def test_post_recipe_like(auth_client, recipe):
     assert response.status_code == status.HTTP_201_CREATED
     assert recipe.get_total_number_of_likes() == 1
 
+# POST /api/recipe/{id}/like/ - Fail
+@pytest.mark.django_db
+def test_post_recipe_like_fail(auth_client, recipe):
+    url = reverse('recipe:recipe-like', args=[recipe.id])
+    auth_client.post(url)
+    response = auth_client.post(url)
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+
 # DELETE /api/recipe/{id}/like/
 @pytest.mark.django_db
 def test_delete_recipe_like(auth_client, recipe):
@@ -131,6 +139,12 @@ def test_delete_recipe_like(auth_client, recipe):
     response = auth_client.delete(reverse('recipe:recipe-like', kwargs={'pk': recipe.id}))
     assert response.status_code == status.HTTP_204_NO_CONTENT
     assert recipe.get_total_number_of_likes() == 0
+
+# DELETE /api/recipe/{id}/like/ - Failure
+@pytest.mark.django_db
+def test_delete_recipe_like_fail(auth_client, recipe):
+    response = auth_client.delete(reverse('recipe:recipe-like', kwargs={'pk': recipe.id}))
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
 
 # POST /api/recipe/create/
 @pytest.mark.django_db
@@ -153,3 +167,18 @@ def test_post_create_recipe(auth_client, category):
     response = auth_client.post(reverse('recipe:recipe-create'), payload, format='multipart')
     assert response.status_code == status.HTTP_201_CREATED
     assert response.data["category_name"] == category.name
+
+# POST /api/recipe/create/ - Failure
+@pytest.mark.django_db
+def test_post_create_recipe_fail(auth_client, category):
+    payload = {
+        'category.name': category.name,
+        'title': 'New Recipe',
+        'desc': 'New description',
+        'cook_time': '01:30:00',
+        'ingredients': 'Ingredients',
+        'procedure': 'Procedure',
+        'picture': "xyz"
+    }
+    response = auth_client.post(reverse('recipe:recipe-create'), payload, format='multipart')
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
