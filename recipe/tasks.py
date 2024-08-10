@@ -8,6 +8,7 @@ from datetime import datetime, timedelta
 
 logger = logging.getLogger(__name__)
 
+# Function to send notification email using celery queue 
 @shared_task
 def send_notification_email(subject, message, recipient_list):
     try:
@@ -16,6 +17,7 @@ def send_notification_email(subject, message, recipient_list):
     except Exception as e:
         logger.error(f'Error sending email: {e}')
 
+# Function to check the number of likes using celery worker and beat 
 @shared_task
 def send_daily_notifications():
     logger.info('Task started: send_daily_notifications')

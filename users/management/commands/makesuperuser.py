@@ -3,6 +3,7 @@ from django.core.management.base import BaseCommand
 
 User = get_user_model()  
 
+# This function is for a command to create a superuser with default email, username and password
 class Command(BaseCommand):  
     def handle(self, *args, **options):  
         username = 'admin'  

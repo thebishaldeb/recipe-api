@@ -7,6 +7,7 @@ from .models import Recipe, RecipeLike
 from .serializers import RecipeSerializer
 from .permissions import IsAuthorOrReadOnly
 
+# It now uses viewsets instead of APIView
 class RecipeViewSet(viewsets.ModelViewSet):
     """
     Recipe ViewSet for viewing, creating, updating, and deleting recipes.
@@ -26,6 +27,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
 
+    # This url is not necessary, just added so that application using `/create` api does not break
     @action(detail=False, methods=['post'], url_path='create', permission_classes=[IsAuthenticated])
     def create_recipe(self, request):
         serializer = self.get_serializer(data=request.data)
@@ -33,7 +35,9 @@ class RecipeViewSet(viewsets.ModelViewSet):
             serializer.save(author=request.user)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        
+   
+# It now uses viewsets instead of APIView
+# We can combine the two requests into a single post request for further improvements
 class RecipeLikeViewSet(viewsets.ViewSet):
     """
     Like, Dislike a recipe

@@ -1,6 +1,7 @@
 from django.apps import AppConfig
 from django.db.models.signals import post_migrate
 
+# This adds a task to send daily notifications based on likes on recipes
 def setup_periodic_tasks(sender, **kwargs):
     from django_celery_beat.models import PeriodicTask, CrontabSchedule
     schedule, _ = CrontabSchedule.objects.get_or_create(
