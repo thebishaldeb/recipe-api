@@ -38,7 +38,7 @@ services:
       context: .
       dockerfile: Dockerfile.celery
     container_name: worker
-    command: celery -A config worker --loglevel=info
+    command: celery -A config worker --loglevel=info --without-gossip --pool=solo
     depends_on:
       - redis
       - django
