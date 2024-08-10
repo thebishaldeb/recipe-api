@@ -7,7 +7,6 @@ from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
 
 from recipe.models import Recipe
-from .models import Profile
 from recipe.serializers import RecipeSerializer
 from . import serializers
 
@@ -114,7 +113,7 @@ class UserBookmarkAPIView(ListCreateAPIView):
     def get_queryset(self):
         return self.request.user.profile.bookmarks.all()
 
-    def post(self, request):
+    def post(self, request, *args, **kwargs):
         recipe_id = request.data.get('id')
         if not recipe_id:
             return Response({"detail": "Recipe ID is required"}, status=status.HTTP_400_BAD_REQUEST)
@@ -124,7 +123,7 @@ class UserBookmarkAPIView(ListCreateAPIView):
         user_profile.bookmarks.add(recipe)
         return Response(status=status.HTTP_200_OK)
 
-    def delete(self, request):
+    def delete(self, request, *args, **kwargs):
         recipe_id = request.data.get('id')
         if not recipe_id:
             return Response({"detail": "Recipe ID is required"}, status=status.HTTP_400_BAD_REQUEST)
