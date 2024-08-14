@@ -5,8 +5,6 @@
 This is a Django-based application for recipe API. Check out the live version [https://recipe-ai.zalophus.site/](https://recipe-ai.zalophus.site/).
 
 - For Admin Dashboard [https://recipe-ai.zalophus.site/admin](https://recipe-ai.zalophus.site/admin)
-  - user - admin@example.com
-  - password - admin
 
 ## Prerequisites
 
